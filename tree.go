@@ -1,7 +1,10 @@
 // go run tree.go
 package main
 
-import "fmt"
+import (
+	// "encoding/json"
+	"fmt"
+)
 
 // move this to a tree class
 
@@ -42,7 +45,6 @@ func (l leaf) Tag() string {
 
 func treeFind(t tree, search string) tree {
 	var resultTree tree
-	// resultTree := tree(nil)
 	if search == t.Tag() {
 		return t
 	} else {
@@ -73,24 +75,41 @@ func printTree(t tree, c int) {
 
 // call it from a tree printer (or something)
 func main() {
-	var found tree
-	l1 := leaf{tag: "other string"}
-	l2 := leaf{tag: "other string"}
-	l3 := leaf{tag: "other string to match"}
-	l4 := leaf{tag: "string to match"}
-	l5 := leaf{tag: "other string"}
+	//var found tree
+	l1 := &leaf{tag: "other string"}
+	l2 := &leaf{tag: "other string"}
+	l3 := &leaf{tag: "almost string to match"}
+	l4_a := &leaf{tag: "child string to match"}
+	l4_b := &leaf{tag: "string to match but not quite"}
+	l5 := &leaf{tag: "other string"}
 
-	b1 := branch{tag: "other str", subTrees: []tree{l1, l2, l3}}
-	b2 := branch{tag: "other str", subTrees: []tree{l4, l5}}
-	t1 := branch{tag: "main tree", subTrees: []tree{b1, b2}}
+	b1 := &branch{tag: "other str", subTrees: []tree{l1, l2, l3}}
+	b2_1_b_1 := &branch{tag: "string to match", subTrees: []tree{l4_a}}
+	b2_1 := &branch{tag: "string to match", subTrees: []tree{l4_b, b2_1_b_1}}
+	b2 := &branch{tag: "other str", subTrees: []tree{b2_1, l5}}
+	t1 := &branch{tag: "main tree", subTrees: []tree{b1, b2}}
 	s := "string to match"
 
 	printTree(t1, 0)
 	fmt.Println("Finding 'string to match'")
-	found = treeFind(t1, s)
+	found := treeFind(t1, s)
 	if nil != found {
 		fmt.Println("found it")
 		printTree(found, 0)
+		/*
+			out, err := json.Marshal(&found) // tree is not a struct, so it has no public attrs
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println(string(out))
+
+			fmt.Printf("%v", found) // format: {<val> [<vals>]}
+
+			fmt.Printf("%#v", found) // format: main.<type>{<key>:<val> []main.<type>{<key>: [<vals>]}
+
+			// best:
+			fmt.Printf("%+v", found) // format: {<key>: <val> <key>{[<vals>]}
+		*/
 	} else {
 		fmt.Println("NOT found it")
 	}
