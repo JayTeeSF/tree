@@ -2,7 +2,7 @@
 package main
 
 import (
-	"encoding/json"
+	// "encoding/json"
 	"fmt"
 )
 
@@ -12,6 +12,7 @@ import (
 type tree interface {
 	Name() string
 	Children() []tree
+	Print(int)
 }
 
 type branch struct {
@@ -27,6 +28,20 @@ func (b branch) Children() []tree {
 	return b.SubTrees
 }
 
+func (b branch) Print(level int) {
+	if level > 0 {
+		for i := 0; i < level; i++ {
+			fmt.Print("\t")
+		}
+		fmt.Print("-> ")
+	}
+	fmt.Println(b.Tag, " (", len(b.SubTrees), ")")
+	count := level + 1
+	for _, subTree := range b.SubTrees {
+		subTree.Print(count)
+	}
+}
+
 func (b branch) Name() string {
 	return b.Tag
 }
@@ -39,17 +54,27 @@ func (l leaf) Name() string {
 	return l.Tag
 }
 
+func (l leaf) Print(level int) {
+	if level > 0 {
+		for i := 0; i < level; i++ {
+			fmt.Print("\t")
+		}
+		fmt.Print("-> ")
+	}
+	fmt.Println(l.Tag, " |")
+}
+
 // need search method(s): dfs and bfs
 // Can we do a common walk method (that accept blocks)
 // or perhaps that uses go-routines and channels (instead of blocks)
 
-func treeFind(t tree, search string) tree {
+func Dfs(t tree, search string) tree {
 	var resultTree tree
 	if search == t.Name() {
 		return t
 	} else {
 		for _, subTree := range t.Children() {
-			resultTree = treeFind(subTree, search)
+			resultTree = Dfs(subTree, search)
 			if nil != resultTree {
 				return resultTree
 			}
@@ -57,20 +82,24 @@ func treeFind(t tree, search string) tree {
 	}
 	return nil
 }
-
-func printTree(t tree, c int) {
-	if c > 0 {
-		for i := 0; i < c; i++ {
-			fmt.Print("\t")
+func Bfs(t tree, search string) tree {
+	var resultTree tree
+	if search == t.Name() {
+		return t
+	} else {
+		for _, subTree := range t.Children() {
+			if search == subTree.Name() {
+				return subTree
+			}
 		}
-		fmt.Print("-> ")
+		for _, subTree := range t.Children() {
+			resultTree = Bfs(subTree, search)
+			if nil != resultTree {
+				return resultTree
+			}
+		}
 	}
-	fmt.Println(t.Name())
-	count := 0
-	for _, subTree := range t.Children() {
-		count += 1
-		printTree(subTree, count)
-	}
+	return nil
 }
 
 // call it from a tree printer (or something)
@@ -90,17 +119,21 @@ func main() {
 	t1 := &branch{Tag: "main tree", SubTrees: []tree{b1, b2}}
 	s := "string to match"
 
-	printTree(t1, 0)
+	//printTree(t1, 0)
+	t1.Print(0)
 	fmt.Println("Finding 'string to match'")
-	found := treeFind(t1, s)
+	found := Dfs(t1, s)
 	if nil != found {
 		fmt.Println("found it")
 		//printTree(found, 0)
-		out, err := json.Marshal(&found) // tree is not a struct, so it has no public attrs
-		if err != nil {
-			panic(err)
-		}
-		fmt.Println(string(out))
+		found.Print(0)
+		/*
+			out, err := json.Marshal(&found) // tree is not a struct, so it has no public attrs
+			if err != nil {
+				panic(err)
+			}
+			fmt.Println(string(out))
+		*/
 
 		/*
 			fmt.Printf("%v", found) // format: {<val> [<vals>]}
